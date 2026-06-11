@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Master</title>
+    <style>
+        :root {
+            --primary-color: #e74c3c;
+            --short-break: #48c9b0;
+            --long-break: #5dade2;
+            --bg-color: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.5s ease;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modes {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+
+        .mode-btn.active {
+            background: rgba(0,0,0,0.2);
+            opacity: 1;
+        }
+
+        #timer {
+            font-size: 6rem;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button.main-btn {
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 5px 0 #ddd;
+        }
+
+        button.main-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #ddd;
+        }
+
+        .stats {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="modes">
+            <button class="mode-btn active" onclick="setMode('foco')">Foco</button>
+            <button class="mode-btn" onclick="setMode('curta')">Pausa Curta</button>
+            <button class="mode-btn" onclick="setMode('longa')">Pausa Longa</button>
+        </div>
+
+        <div id="timer">25:00</div>
+
+        <div class="controls">
+            <button class="main-btn" id="startBtn" onclick="toggleTimer()">Começar</button>
+        </div>
+
+        <div class="stats">
+            Ciclo: #<span id="cycleCount">1</span>
+        </div>
+    </div>
+
+    <audio id="alarm" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
+
+    <script>
+        let timeLeft = 25 * 60;
+        let timerId = null;
+        let currentMode = 'foco';
+        let cycles = 1;
+
+        const timerDisplay = document.getElementById('timer');
+        const startBtn = document.getElementById('startBtn');
+        const alarm = document.getElementById('alarm');
+        const cycleDisplay = document.getElementById('cycleCount');
+
+        const modes = {
+            foco: { time: 25 * 60, color: '#e74c3c' },
+            curta: { time: 5 * 60, color: '#48c9b0' },
+            longa: { time: 15 * 60, color: '#5dade2' }
+        };
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            timerDisplay.textContent = display;
+            document.title = `${display} - Pomodoro`;
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            timeLeft = modes[mode].time;
+            document.body.style.backgroundColor = modes[mode].color;
+            startBtn.style.color = modes[mode].color;
+            
+            // Atualizar botões
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.textContent.toLowerCase().includes(mode.substring(0,3))) btn.classList.add('active');
+            });
+
+            stopTimer();
+            updateDisplay();
+        }
+
+        function toggleTimer() {
+            if (timerId) {
+                stopTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            startBtn.textContent = "Pausar";
+            timerId = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+                if (timeLeft === 0) {
+                    clearInterval(timerId);
+                    alarm.play();
+                    handleFinish();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            clearInterval(timerId);
+            timerId = null;
+            startBtn.textContent = "Começar";
+        }
+
+        function handleFinish() {
+            if (currentMode === 'foco') {
+                cycles++;
+                cycleDisplay.textContent = cycles;
+                alert("Bom trabalho! Hora de descansar.");
+            } else {
+                alert("Descanso acabou! Mãos à obra.");
+            }
+            stopTimer();
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
